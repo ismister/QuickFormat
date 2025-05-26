@@ -1,2 +1,2 @@
 # QuickFormat
-light service to format videos and audios online
+light service to convert videos and audios online
