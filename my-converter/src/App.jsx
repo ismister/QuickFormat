@@ -184,8 +184,8 @@ function App() {
 
         // URL для файлов ядра FFmpeg (которые должны лежать в public/)
         const baseURL = window.location.origin; // например, http://localhost:5173
-        const coreJsURL = `${baseURL}/ffmpeg-core.js`;
-        const coreWasmURL = `${baseURL}/ffmpeg-core.wasm`;
+        const coreJsURL = new URL(import.meta.env.BASE_URL + 'ffmpeg-core.js', window.location.origin).href;
+        const coreWasmURL = new URL(import.meta.env.BASE_URL + 'ffmpeg-core.wasm', window.location.origin).href;
 
         console.log('Параметры для ffmpeg.load():');
         console.log('  classWorkerURL:', proxyWorkerURL);
