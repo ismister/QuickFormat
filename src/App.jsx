@@ -166,7 +166,7 @@ function App() {
           // Путь указывается относительно файла, в котором используется import.meta.url.
           // Если App.jsx в src/, то путь к node_modules будет '../node_modules/'
           proxyWorkerURL = new URL(
-            '../node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js',
+            '../node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js?worker&inline',
             import.meta.url
           ).href;
           console.log('URL для прокси-воркера FFmpeg (через import.meta.url):', proxyWorkerURL);
