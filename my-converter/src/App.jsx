@@ -26,10 +26,6 @@ function App() {
 
   const totalDurationRef = useRef(0); // Для хранения общей длительности текущего файла (в секундах)
   const conversionStartTimeRef = useRef(0); // Для хранения времени начала текущей конвертации
-
-  const ffprobeOutputRef = useRef(""); // Будет накапливать stdout от ffprobe
-  const isProbingRef = useRef(false); 
-
   const fileInputRef = useRef(null); // Для триггера клика по input[type=file]
 
   const fileTypes = ["MP3", "M4A", "MP4", "WAV", "OGG", "AVI"];
@@ -72,7 +68,7 @@ function App() {
      * @param {string} logMessage - Строка лога.
      * @returns {number|null} Время в секундах или null.
      */
-/*const parseTimeToSeconds = (logMessage) => {
+    const parseTimeToSeconds = (logMessage) => {
     // Ищем паттерн time=HH:MM:SS.ms (или time= SSSS.ms)
     const timeMatch = logMessage.match(/time=(\d{2,}):(\d{2}):(\d{2}\.\d+)/); // Для HH:MM:SS.ms
     if (timeMatch) {
@@ -87,14 +83,14 @@ function App() {
     //   return parseFloat(simpleTimeMatch[1]);
     // }
     return null;
-    };*/
+    };
 
     /**
      * Форматирует оставшееся время в строку -HH:MM:SS.
      * @param {number} totalSeconds - Общее количество секунд.
      * @returns {string} - Отформатированная строка времени.
      */
-/*const formatEta = (totalSeconds) => {
+    const formatEta = (totalSeconds) => {
     if (isNaN(totalSeconds) || totalSeconds < 0 || !isFinite(totalSeconds)) {
     return "- --:--:--";
     }
@@ -104,73 +100,7 @@ function App() {
 
     const pad = (num) => String(num).padStart(2, '0');
     return `-${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
-    };*/
-
-/*const getDurationWithFFprobe = async (ffmpeg, fileNameInFS) => {
-        ffprobeOutputRef.current = ""; // Очищаем предыдущий вывод
-        isProbingRef.current = true;   // Устанавливаем флаг, что ffprobe запущен
-
-        try {
-            console.log(`Запускаем ffprobe для файла (данные будут из логов stdout): ${fileNameInFS}`);
-            const commandArgs = [
-            '-v', 'error', // Чтобы не засорять stdout лишним, ошибки ffprobe пойдут в stderr лога
-            '-print_format', 'json',
-            '-show_format',
-            '-show_streams', // Полезно для альтернативного получения длительности
-            fileNameInFS
-            ];
-            // console.log('Аргументы для ffprobe:', commandArgs.join(' '));
-
-            // Запускаем ffprobe. Его возвращаемое значение (например, -1) нас теперь меньше волнует,
-            // так как мы ожидаем данные через on('log', {type: 'stdout'})
-            const ffprobeExitCode = await ffmpeg.ffprobe(commandArgs);
-            console.log('Код завершения ffprobe (может быть -1 или другим):', ffprobeExitCode);
-
-        } catch (error) {
-            // Эта ошибка возникнет, если сам вызов ffmpeg.ffprobe() выбросит исключение
-            console.error('Ошибка при вызове ffmpeg.ffprobe():', error);
-            isProbingRef.current = false; // Сбрасываем флаг
-            return null;
-        }
-
-        isProbingRef.current = false; // Сбрасываем флаг после завершения ffprobe
-
-        // Теперь пытаемся распарсить накопленный stdout
-        const collectedStdout = ffprobeOutputRef.current;
-        if (!collectedStdout || collectedStdout.trim() === "") {
-            console.error('ffprobe не вывел данные в stdout (согласно логам). Код завершения был:', );
-            return null;
-        }
-
-        console.log('Собранный stdout от ffprobe для парсинга:', collectedStdout);
-
-        try {
-            const ffprobeData = JSON.parse(collectedStdout);
-            // console.log('Вывод ffprobe (JSON из лога):', ffprobeData); // Уже выводится в on('log')
-
-            if (ffprobeData && ffprobeData.format && ffprobeData.format.duration) {
-            const duration = parseFloat(ffprobeData.format.duration);
-            if (!isNaN(duration) && duration > 0) return duration;
-            }
-            if (ffprobeData && ffprobeData.streams && ffprobeData.streams.length > 0) {
-            for (const stream of ffprobeData.streams) {
-                if ((stream.codec_type === 'video' || stream.codec_type === 'audio') && stream.duration) {
-                const duration = parseFloat(stream.duration);
-                if (!isNaN(duration) && duration > 0) {
-                    console.log(`Используется длительность из потока (${stream.codec_type}): ${duration}`);
-                    return duration;
-                }
-                }
-            }
-            }
-            console.warn('Не удалось извлечь корректную длительность из собранного вывода ffprobe.');
-            return null;
-        } catch (e) {
-            console.error('Ошибка парсинга JSON из собранного stdout ffprobe:', e, "\nСобранные данные:\n", collectedStdout);
-            return null;
-        }
     };
-*/
 
   // --- useEffect для загрузки FFmpeg ---
   useEffect(() => {
@@ -186,11 +116,46 @@ function App() {
 
       if (typeof ffmpeg.on === 'function') {
         ffmpeg.on('log', ({ type, message }) => {
-          console.log(`[FFMPEG LOG via .on()][${type}]: ${message}`);
+            console.log(`[FFMPEG LOG][${type}]: ${message}`);
+        if (type === 'stderr') { // И длительность, и прогресс теперь из stderr от exec
+            // 1. Пытаемся извлечь общую длительность, если она еще не установлена
+            if (totalDurationRef.current === 0) {
+              const durationMatch = message.match(/Duration: (\d{2,}):(\d{2}):(\d{2}\.\d+)/);
+              if (durationMatch) {
+                const hours = parseInt(durationMatch[1], 10);
+                const minutes = parseInt(durationMatch[2], 10);
+                const seconds = parseFloat(durationMatch[3]);
+                totalDurationRef.current = hours * 3600 + minutes * 60 + seconds;
+                console.log(`Общая длительность файла (из лога exec): ${totalDurationRef.current} секунд.`);
+              }
+            }
+
+            // 2. Пытаемся извлечь текущее время для прогресса
+            const currentTimeInSeconds = parseTimeToSeconds(message);
+            if (currentTimeInSeconds !== null && totalDurationRef.current > 0) {
+              let progress = (currentTimeInSeconds / totalDurationRef.current) * 100;
+              progress = Math.min(100, Math.max(0, progress));
+              setConversionProgress(progress);
+
+              const elapsedTimeSeconds = (performance.now() - conversionStartTimeRef.current) / 1000;
+              if (progress > 0.1 && elapsedTimeSeconds > 0.1) { // Начинаем считать ETA чуть позже
+                const totalEstimatedTimeSeconds = elapsedTimeSeconds / (progress / 100);
+                const remainingTimeSeconds = totalEstimatedTimeSeconds - elapsedTimeSeconds;
+                setEta(formatEta(remainingTimeSeconds));
+              }
+            } else if (message.includes("Lsize") || message.startsWith("video: समय")) { // "время" - это если локаль FFmpeg вдруг станет русской для "time"
+                 // Lsize обычно означает конец успешной конвертации
+                 console.log('FFmpeg конвертация завершена (судя по Lsize или video:). Устанавливаем 100%');
+                if (totalDurationRef.current > 0) { // Убедимся, что длительность была определена
+                    setConversionProgress(100);
+                    setEta(formatEta(0));
+                }
+            }
+          }
         });
-        console.log('Подписка на событие "log" FFmpeg установлена (если поддерживается).');
+        console.log('Подписка на событие "log" FFmpeg установлена.');
       } else {
-        console.warn('Метод .on() для логов не найден на экземпляре FFmpeg. Логирование может быть ограничено.');
+        console.warn('Метод .on() для логов не найден на экземпляре FFmpeg.');
       }
 
       try {
@@ -377,20 +342,13 @@ function App() {
         await ffmpegInstance.writeFile(inputFileNameInFS, fileData);
         console.log(`Файл ${inputFileNameInFS} записан в MEMFS.`);
 
+        conversionStartTimeRef.current = performance.now();
+
         // 2. Формируем команду для FFmpeg
         const command = ['-i', inputFileNameInFS];
         const audioBitrate = '192k';
         const inputExtension = inputFileNameInFS.split('.').pop().toLowerCase();
         const isInputPotentiallyVideo = ['mp4', 'avi', 'mov', 'mkv', 'flv', 'webm'].includes(inputExtension);
-
-        /*const duration = await getDurationWithFFprobe(ffmpegInstance, inputFileNameInFS);
-        if (duration && duration > 0) {
-            totalDurationRef.current = duration;
-            console.log(`Общая длительность файла: ${duration} секунд.`);
-        } else {
-            console.warn('Не удалось получить длительность файла. Прогресс может не отображаться корректно.');
-            // Можно не показывать ETA или показывать только неопределенный прогресс
-        }*/
 
         switch (outputFormat) {
             case 'mp3':
@@ -429,6 +387,11 @@ function App() {
         console.log("Результат выполнения ffmpeg.exec (если есть):", result);
         // Если exec не выбросил ошибку, и мы дошли сюда, значит команда формально выполнилась.
         // Теперь нужно проверить, что файл действительно создан и имеет ненулевой размер.
+
+        if (conversionProgress < 100 && totalDurationRef.current > 0) { // Если вдруг не дошло до 100
+          setConversionProgress(100);
+          setEta(formatEta(0));
+        }
 
         // 4. Читаем сконвертированный файл из виртуальной файловой системы
         // ИЗМЕНЕНИЕ: используем ffmpegInstance.readFile() напрямую
