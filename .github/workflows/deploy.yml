@@ -5,13 +5,13 @@ name: Build and Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Или ваша основная ветка (master, итд)
+      - main 
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Необходимо для gh-pages action для пуша в ветку gh-pages
+      contents: write
 
     steps:
       - name: Checkout 🛎️
@@ -20,25 +20,18 @@ jobs:
       - name: Set up Node.js ⚙️
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Укажите вашу или LTS версию Node.js
+          node-version: '18'
 
       - name: Install dependencies 📦
-        run: npm ci # Более строгая установка, чем npm install
+        run: npm ci
 
       - name: Build project 🏗️
         run: npm run build
         env:
-          # Если ваш репозиторий приватный и vite.config.js base не может его определить,
-          # можно задать VITE_BASE_URL здесь, но обычно base в vite.config.js достаточно.
-          # VITE_BASE_URL: /<ИМЯ_ВАШЕГО_РЕПОЗИТОРИЯ>/
-          CI: false # Иногда помогает избежать проблем с предупреждениями как ошибками
+          CI: false
 
       - name: Deploy to GitHub Pages 🚀
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # Папка, которую Vite создает при сборке
-          # publish_branch: gh-pages # Ветка, куда будут выгружаться файлы (по умолчанию)
-          # user_name: 'github-actions[bot]' # Имя коммитера (опционально)
-          # user_email: 'github-actions[bot]@users.noreply.github.com' # Email коммитера (опционально)
-          # cname: yourcustomdomain.com # Если у вас есть кастомный домен (опционально)
+          publish_dir: ./dist
