@@ -161,23 +161,11 @@ function App() {
       try {
         let proxyWorkerURL;
         try {
-          // Пытаемся получить URL для "прокси" воркера из @ffmpeg/ffmpeg/dist/esm/worker.js
-          // Vite должен обработать этот путь и предоставить корректный URL.
-          // Путь указывается относительно файла, в котором используется import.meta.url.
-          // Если App.jsx в src/, то путь к node_modules будет '../node_modules/'
-          proxyWorkerURL = new URL(
-            '../node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js',
-            import.meta.url
-          ).href;
+          proxyWorkerURL = new URL(import.meta.env.BASE_URL + 'ffmpeg_proxy/worker.js', window.location.origin).href;
           console.log('URL для прокси-воркера FFmpeg (через import.meta.url):', proxyWorkerURL);
         } catch (e) {
           console.error('Не удалось создать URL для прокси-воркера через import.meta.url:', e);
           showError('Критическая ошибка: не удалось определить путь к прокси-воркеру FFmpeg.');
-          // В качестве запасного варианта, если import.meta.url не сработал как ожидалось,
-          // и если вы скопировали worker.js в public/ffmpeg_proxy_worker.js:
-          // proxyWorkerURL = new URL('/ffmpeg_proxy_worker.js', window.location.origin).href;
-          // console.log('Используется запасной URL для прокси-воркера FFmpeg (из public/):', proxyWorkerURL);
-          // Если и этот вариант не подходит, то загрузка невозможна.
           return; // Прерываем загрузку
         }
 
