@@ -166,7 +166,7 @@ function App() {
           // Путь указывается относительно файла, в котором используется import.meta.url.
           // Если App.jsx в src/, то путь к node_modules будет '../node_modules/'
           proxyWorkerURL = new URL(
-            '../node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js?worker&inline',
+            '../node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js',
             import.meta.url
           ).href;
           console.log('URL для прокси-воркера FFmpeg (через import.meta.url):', proxyWorkerURL);
@@ -182,26 +182,29 @@ function App() {
         }
 
 
+        const baseAppPath = import.meta.env.BASE_URL; // '/QuickFormat/'
+
+
         // URL для файлов ядра FFmpeg (которые должны лежать в public/)
         const baseURL = window.location.origin; // например, http://localhost:5173
-        const coreJsURL = new URL(import.meta.env.BASE_URL + 'ffmpeg-core.js', window.location.origin).href;
-        const coreWasmURL = new URL(import.meta.env.BASE_URL + 'ffmpeg-core.wasm', window.location.origin).href;
+        const coreJsURL = new URL(baseAppPath + 'ffmpeg-core.js', window.location.origin).href;
+        const coreWasmURL = new URL(baseAppPath + 'ffmpeg-core.wasm', window.location.origin).href;
+        const coreWorkerJsURL = new URL(baseAppPath + 'ffmpeg-core.worker.js', baseURL).href; // <--- ВАЖНО! Путь к воркеру ядра
+
 
         console.log('Параметры для ffmpeg.load():');
         console.log('  classWorkerURL:', proxyWorkerURL);
         console.log('  coreOptions.coreURL:', coreJsURL);
         console.log('  coreOptions.wasmURL:', coreWasmURL);
-        console.log('  coreOptions.workerURL: не указывается (файл ffmpeg-core.worker.js из @ffmpeg/core не найден)');
+        console.log('  coreOptions.workerURL:', coreWorkerJsURL);
 
         await ffmpeg.load({
           classWorkerURL: proxyWorkerURL, // Путь к "прокси" воркеру из @ffmpeg/ffmpeg
           coreOptions: {
-            coreURL: coreJsURL,        // Путь к ffmpeg-core.js (из @ffmpeg/core) в public/
-            wasmURL: coreWasmURL,        // Путь к ffmpeg-core.wasm (из @ffmpeg/core) в public/
-            // workerURL для ядра @ffmpeg/core здесь намеренно не указан,
-            // так как вы не нашли соответствующий файл ffmpeg-core.worker.js.
-            // FFmpeg попытается работать в однопоточном режиме внутри прокси-воркера.
-          }
+            coreURL: coreJsURL,         // Путь к ffmpeg-core.js (из @ffmpeg/core) в public/
+            wasmURL: coreWasmURL,       // Путь к ffmpeg-core.wasm (из @ffmpeg/core) в public/
+            workerURL: coreWorkerJsURL    // Путь к ffmpeg-core.worker.js (из @ffmpeg/core) в public/
+          } 
         });
 
         if (ffmpeg.loaded) {
