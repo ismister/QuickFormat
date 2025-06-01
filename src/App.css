@@ -2,54 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px; /* Пространство между кнопкой конвертации и основной секцией */
+  gap: 20px;
   padding: 20px;
-  user-select: none; /* Запретить выделение текста для UI элементов */
+  user-select: none;
+  width: 100%;
+  max-width: 900px; /* Максимальная ширина для десктопа */
+  margin: auto;
 }
-
-.converter-ui {
-  display: flex;
-  align-items: center;
-  gap: 15px; /* Пространство между элементами: тип-квадрат-точки-квадрат-тип */
-}
-
-/* Стили для селекторов типа файла (детали 1 и 4) */
-.type-selector {
-  background-color: #C7E7E7;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  height: 280px; /* Примерная высота, чтобы вместить типы */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around; /* Равномерное распределение элементов */
-}
-
-.type-selector div {
-  color: black;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  text-align: center;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.type-selector div:hover {
-  background-color: rgba(0,0,0,0.05);
-}
-
-.type-selector div.selected {
-  background-color: #C1FEFE; /* Бирюзовый для выделения */
-  font-weight: bold;
-}
-
-.type-selector div.disabled {
-  color: #888888;
-  cursor: not-allowed;
-  background-color: transparent !important; /* Убедиться, что фон не меняется при ховере */
-}
-
 
 /* Стили для квадратов загрузки/скачивания (детали 2 и 3) */
 .file-handler-box {
@@ -73,6 +32,12 @@
   opacity: 0.5;
   cursor: not-allowed;
   background-color: #B0B0B0; /* Немного темнее для disabled состояния */
+}
+
+.file-handler-box.output-box.disabled { /* Для мобильных output box может быть задизейблен */
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #B0B0B0;
 }
 
 .file-handler-box .arrow {
@@ -142,54 +107,87 @@
   66.67% { opacity: 0.3; }
 }
 
-/* Стили для шкалы прогресса */
-.progress-bar-container {
+/* Стили для прогресс-бара */
+.progress-bar-section {
+  width: 100%; /* На мобильных будет 100% */
+  order: -1; /* Для мобильных - поднять на самый верх flex-контейнера .app-container */
   width: 465px; /* Ширина двух квадратов (200+200) + промежуток (65px) или настройте по вашему макету */
   margin: 20px auto; /* Центрирование и отступ сверху/снизу, такой же как у кнопки Convert */
+}
+
+.progress-bar-container {
+  width: 100%; /* По умолчанию, для мобильных */
+  /* margin: 0 auto 20px; убираем margin, т.к. позиционируется через .progress-bar-section */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.progress-labels {
-  width: 100%;
+.progress-labels-container { /* Новый контейнер для меток под шкалой */
+  width: 100%; /* На всю ширину шкалы */
   display: flex;
-  justify-content: space-between; /* Проценты слева, ETA справа */
-  margin-bottom: 5px;
-  color: white; /* Белый текст для процентов и ETA */
+  justify-content: space-between;
+  padding: 0 10px; /* Небольшие отступы по бокам для текста */
+  box-sizing: border-box;
+  margin-top: 4px; /* Отступ от шкалы до текста */
+}
+
+.progress-percentage,
+.progress-eta {
+  color: white;
   font-size: 14px;
 }
 
-.progress-percentage {
-  /* Для центрирования текста над шкалой, если только проценты: text-align: center; width: 100%; */
-  /* Так как ETA справа, этот текст будет слева */
-}
-
-.progress-eta {
-  /* Текст ETA будет справа */
-}
-
 .progress-bar-track {
-  width: 100%;
-  height: 20px;
-  background-color: #D1D1D1;
-  border-radius: 10px;
-  overflow: hidden; /* Чтобы скругление работало для fill */
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  width: 100%; /* На всю ширину .progress-bar-container */
+  height: 10px; /* Тонкая линия */
+  background-color: transparent; /* Фона у трека нет по вашему желанию */
+  border-radius: 5px;
+  overflow: hidden;
+  /* border: 1px solid rgba(205, 205, 205, 0.5); */
 }
 
 .progress-bar-fill {
   height: 100%;
-  /* Градиент от #C7E7E7 до #C1FEFE */
-  background: linear-gradient(to right, #C7E7E7, #C1FEFE);
-  border-radius: 10px; /* Для плавного заполнения */
-  transition: width 0.1s linear; /* Плавное изменение ширины */
+  background: linear-gradient(to right, #C7E7E7, #C1FEFE); /* Градиент для заполнения */
+  border-radius: 5px;
+  transition: width 0.1s linear;
+}
+
+.main-controls { /* Для мобильных: input, convert, output в столбик */
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 15px; /* Промежуток между кнопками и блоками */
+  width: 100%; /* На мобильных элементам можно дать большую ширину */
+}
+
+.desktop-selectors-container {
+  display: none; /* По умолчанию скрыты (mobile-first) */
+  align-items: center; /* На десктопе будут flex */
+  gap: 15px;
+  width: 100%; /* Займет доступную ширину в .app-container */
+  justify-content: center; /* Центрируем селекторы на десктопе */
+}
+
+.converter-ui { /* Старый контейнер, теперь может быть не нужен или переименован, если все в .main-controls */
+  display: flex; /* Оставляем для совместимости, если где-то используется */
+  align-items: center;
+  gap: 15px;
 }
 
 /* Стили для окна ошибки */
+.error-message-wrapper {
+    position: fixed;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 1001; /* Выше модалки, если нужно */
+    pointer-events: none; /* Чтобы не мешала кликам под ней */
+}
+
 .error-message {
   position: fixed; /* Поверх всего */
   bottom: 20px;
@@ -207,7 +205,64 @@
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
+.error-message {
+  background-color: #686868; /* Серый фон */
+  color: black; /* Черный текст */
+  padding: 10px 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  font-size: 14px; /* Чуть меньше для мобильных */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  border: 3px solid red; /* Красная граница сверху */
+  pointer-events: all; /* Чтобы можно было выделить текст ошибки */
+}
 .error-message.visible {
   opacity: 1;
   visibility: visible;
+}
+
+
+@media (min-width: 768px) {
+  .progress-bar-section {
+    order: 0; /* Возвращаем на десктопе порядок по умолчанию (или задаем нужный) */
+    width: 465px; /* Ширина как для десктопной версии */
+    margin: 20px auto 0; /* Отступ сверху, центрирование, без нижнего (или с ним, если нужно) */
+    position: static; /* Отменяем fixed */
+  }
+
+  .progress-labels-container {
+    padding: 0; /* Убираем боковые отступы для десктопа, если не нужны */
+  }
+
+  .main-controls {
+    flex-direction: row; /* На десктопе элементы в ряд */
+    /* width: auto; /* Ширина по содержимому */
+    /* Этот блок может быть тем же, что и .converter-ui раньше */
+  }
+
+  /* Показываем десктопные селекторы и скрываем/изменяем мобильные элементы, если нужно */
+  .desktop-only {
+    display: flex !important; /* Показываем десктопные селекторы */
+  }
+
+  .desktop-selectors-container {
+    display: flex; /* Показываем контейнер с десктопными селекторами */
+    order: -1; /* Например, ставим их перед .main-controls в .app-container, если нужно */
+               /* Или они могут быть частью другой структуры HTML для десктопа */
+               /* Текущий JSX предполагает, что они идут после .main-controls */
+  }
+
+
+  /* Возможно, нужно будет настроить ширину .file-handler-box и .convert-button
+     обратно к их десктопным значениям, если они менялись для мобильных */
+  .file-handler-box {
+    width: 200px;
+    height: 200px;
+  }
+  .convert-button {
+    width: auto; /* Или фиксированная ширина для десктопа */
+    padding: 15px 50px; /* Возвращаем десктопные паддинги */
+  }
 }
