@@ -67,10 +67,10 @@
   font-size: 1em;
   border: none;
   border-radius: 8px;
-  background-color: #CDCDCD; /* Серый из вашей палитры для кнопки Cancel */
+  background-color: #CDCDCD;
   color: white;
   cursor: pointer;
-  width: 100%; /* На всю ширину контента модалки */
+  width: 100%;
 }
 
 .modal-cancel-button:hover {

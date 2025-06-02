@@ -32,7 +32,7 @@ function App() {
   const fileInputRef = useRef(null);
 
   // --- Константы ---
-  const fileTypes = ["MP3", "M4A", "MP4", "WAV", "OGG", "AVI"];
+  const fileTypes = ["MP3", "M4A", "MP4", "WAV", "OGG", "AVI", "MOV"];
 
   // --- Вспомогательные функции (showError, getMimeType, parseTimeToSeconds, formatEta) ---
   const showError = useCallback((message) => {
@@ -51,6 +51,7 @@ function App() {
       case 'wav': return 'audio/wav';
       case 'ogg': return 'audio/ogg';
       case 'avi': return 'video/x-msvideo';
+      case 'mov': return 'video/quicktime';
       default: return 'application/octet-stream';
     }
   };
@@ -215,7 +216,6 @@ function App() {
     startActualConversionProcess(outputType.toUpperCase());
   };
 
-  // Основная логика конвертации, теперь отдельная функция
   const startActualConversionProcess = async (finalOutputType) => {
     if (!ffmpegInstance || !ffmpegLoaded) { showError("Модуль FFmpeg не загружен."); return; }
     if (!inputFile) { showError("Входной файл не выбран."); return; }
@@ -228,7 +228,6 @@ function App() {
     setConversionProgress(0);
     setEta("--:--:--");
     totalDurationRef.current = 0;
-    // outputFile и outputFileName сбрасываются при выборе нового inputFile
 
     const inputFileNameInFS = inputFile.name;
     const outputFormat = finalOutputType.toLowerCase();
@@ -258,6 +257,15 @@ function App() {
                 command.push('-c:v', 'mpeg4', '-qscale:v', '4', '-c:a', 'libmp3lame', '-b:a', audioBitrate);
             } else { command.push('-c:a', 'libmp3lame', '-b:a', audioBitrate); }
             break;
+        case 'mov':
+          if (isInputVideo) {
+              command.push('-c:v', 'libx264', '-preset', 'medium', '-pix_fmt', 'yuv420p');
+              command.push('-c:a', 'aac', '-b:a', audioBitrate);
+              // Для MOV может быть полезен флаг -movflags +faststart для веб-оптимизации,
+              // command.push('-movflags', '+faststart');
+          } else {
+              command.push('-c:a', 'aac', '-b:a', audioBitrate); }
+          break;
         default: console.warn(`Формат для команды не опознан: ${outputFormat}`);
       }
       command.push(outputFileNameInFS);
@@ -294,6 +302,7 @@ function App() {
         }
       } catch (e) { console.error("Ошибка очистки MEMFS:", e); }
       setIsConverting(false);
+      setSelectedOutputType(null);
     }
   };
 
@@ -309,7 +318,7 @@ function App() {
       setShowProgressBar(false); 
     }
 };
-  const getAcceptAttribute = () => "audio/*,video/*"; // Упрощено для мобильных
+  const getAcceptAttribute = () => "audio/*,video/*,.mov,video/quicktime"; // Упрощено для мобильных
 
   // Логика для отображения квадрата скачивания
   const isOutputBoxActuallyDisabled = !outputFile || isConverting;
@@ -373,12 +382,12 @@ function App() {
         onClose={() => setIsOutputTypeModalOpen(false)}
         fileTypes={fileTypes}
         onSelectOutputType={handleOutputTypeSelectedFromModal}
-        disabledType={selectedInputType} // Передаем тип ВХОДНОГО файла для блокировки
+        disabledType={selectedInputType}
       />
 
       {/* Сообщение об ошибке */}
       {errorMessage && (
-        <div className="error-message-wrapper"> {/* Обертка для позиционирования */}
+        <div className="error-message-wrapper">
             <div className={`error-message ${errorMessage ? 'visible' : ''}`}>
             {errorMessage}
             </div>
