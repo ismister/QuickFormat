@@ -1,3 +1,7 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -6,7 +10,6 @@
   padding: 20px;
   user-select: none;
   width: 100%;
-  max-width: 900px; /* Максимальная ширина для десктопа */
   margin: auto;
 }
 
@@ -34,7 +37,7 @@
   background-color: #B0B0B0; /* Немного темнее для disabled состояния */
 }
 
-.file-handler-box.output-box.disabled { /* Для мобильных output box может быть задизейблен */
+.file-handler-box.output-box.disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background-color: #B0B0B0;
@@ -76,7 +79,6 @@
 
 .convert-button:disabled {
   cursor: not-allowed;
-  /* opacity будет управляться через JS, но можно задать базовый стиль */
 }
 
 /* Стили для анимации точек */
@@ -111,8 +113,10 @@
 .progress-bar-section {
   width: 100%; /* На мобильных будет 100% */
   order: -1; /* Для мобильных - поднять на самый верх flex-контейнера .app-container */
-  width: 465px; /* Ширина двух квадратов (200+200) + промежуток (65px) или настройте по вашему макету */
-  margin: 20px auto; /* Центрирование и отступ сверху/снизу, такой же как у кнопки Convert */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Чтобы был поверх всего */
 }
 
 .progress-bar-container {
@@ -238,22 +242,9 @@
 
   .main-controls {
     flex-direction: row; /* На десктопе элементы в ряд */
-    /* width: auto; /* Ширина по содержимому */
+    width: auto; /* Ширина по содержимому */
     /* Этот блок может быть тем же, что и .converter-ui раньше */
   }
-
-  /* Показываем десктопные селекторы и скрываем/изменяем мобильные элементы, если нужно */
-  .desktop-only {
-    display: flex !important; /* Показываем десктопные селекторы */
-  }
-
-  .desktop-selectors-container {
-    display: flex; /* Показываем контейнер с десктопными селекторами */
-    order: -1; /* Например, ставим их перед .main-controls в .app-container, если нужно */
-               /* Или они могут быть частью другой структуры HTML для десктопа */
-               /* Текущий JSX предполагает, что они идут после .main-controls */
-  }
-
 
   /* Возможно, нужно будет настроить ширину .file-handler-box и .convert-button
      обратно к их десктопным значениям, если они менялись для мобильных */
