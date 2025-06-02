@@ -27,7 +27,7 @@
 
 1.  **Клонируйте репозиторий:**
     ```bash
-    git clone [https://github.com/ismister/QuickFormat.git](https://github.com/ismister/QuickFormat.git) # Замените URL на ваш
+    git clone [https://github.com/ismister/QuickFormat.git](https://github.com/ismister/QuickFormat.git)
     cd QuickFormat
     ```
 
